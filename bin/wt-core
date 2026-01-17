@@ -42,6 +42,78 @@ get_main_repo() {
     dirname "$git_common_dir"
 }
 
+# Interactive list picker with arrow key navigation.
+# Usage: select_from_list "item1" "item2" "item3"
+# Returns: selected item on stdout, or empty string if cancelled
+select_from_list() {
+    local items=("$@")
+    local count=${#items[@]}
+    local selected=0
+
+    # Hide cursor (ANSI escape code).
+    echo -en "\033[?25l" >&2
+
+    # Restore cursor on exit.
+    cleanup() {
+        echo -en "\033[?25h" >&2
+    }
+    trap cleanup EXIT
+
+    # Draw the list.
+    draw_list() {
+        local i
+        for i in "${!items[@]}"; do
+            if [[ $i -eq $selected ]]; then
+                echo -e "\033[36m> ${items[$i]}\033[0m\033[K" >&2
+            else
+                echo -e "  ${items[$i]}\033[K" >&2
+            fi
+        done
+    }
+
+    # Initial draw.
+    draw_list
+
+    # Read input.
+    while true; do
+        local key
+        IFS= read -rsn1 key </dev/tty
+
+        case "$key" in
+            $'\x1b')  # Escape sequence (arrow keys)
+                read -rsn2 key </dev/tty
+                case "$key" in
+                    '[A')  # Up arrow
+                        if ((selected > 0)); then
+                            ((selected--))
+                            echo -en "\033[${count}A" >&2
+                            draw_list
+                        fi
+                        ;;
+                    '[B')  # Down arrow
+                        if ((selected < count - 1)); then
+                            ((selected++))
+                            echo -en "\033[${count}A" >&2
+                            draw_list
+                        fi
+                        ;;
+                esac
+                ;;
+            '')  # Enter key
+                cleanup
+                trap - EXIT
+                echo "${items[$selected]}"
+                return 0
+                ;;
+            'q')  # Quit
+                cleanup
+                trap - EXIT
+                return 1
+                ;;
+        esac
+    done
+}
+
 # -----------------------------------------------------------------------------
 # Commands
 # -----------------------------------------------------------------------------
@@ -117,6 +189,24 @@ cmd_create() {
 }
 
 cmd_co() {
+    local open_cursor=false
+
+    # Parse arguments.
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -c)
+                open_cursor=true
+                shift
+                ;;
+            -*)
+                die "Unknown flag: $1"
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
     # Ensure we're in a git repo.
     if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         die "not inside a Git repository."
@@ -142,35 +232,36 @@ cmd_co() {
         die "no worktrees found (only main repo exists)."
     fi
 
-    # Display selection menu.
-    echo "Select a worktree:"
+    # Build parallel arrays of names and paths.
+    local worktree_names=()
     local i
     for i in "${!worktree_paths[@]}"; do
-        echo "  $((i + 1))) ${worktree_paths[$i]}"
+        worktree_names+=("$(basename "${worktree_paths[$i]}")")
     done
 
-    echo -n "Enter number (or press Enter to cancel): "
-    local choice
-    read -r choice </dev/tty
+    # Interactive selection.
+    local selected_name
+    selected_name="$(select_from_list "${worktree_names[@]}")"
 
-    if [[ -z "$choice" ]]; then
-        echo "Cancelled."
+    if [[ -z "$selected_name" ]]; then
+        echo "Cancelled." >&2
         emit_exit 0
         return
     fi
 
-    if ! [[ "$choice" =~ ^[0-9]+$ ]]; then
-        die "invalid selection."
-    fi
-
-    if (( choice < 1 || choice > ${#worktree_paths[@]} )); then
-        die "selection out of range."
-    fi
-
-    local target_path="${worktree_paths[$((choice - 1))]}"
+    # Find the corresponding full path.
+    local target_path=""
+    for i in "${!worktree_names[@]}"; do
+        if [[ "${worktree_names[$i]}" == "$selected_name" ]]; then
+            target_path="${worktree_paths[$i]}"
+            break
+        fi
+    done
 
     # Emit directives.
-    emit_cursor "$target_path"
+    if [[ "$open_cursor" == true ]]; then
+        emit_cursor "$target_path"
+    fi
     emit_cd "$target_path"
     emit_exit 0
 }
@@ -276,12 +367,12 @@ cmd_help() {
     echo ""
     echo "Commands:"
     echo "  create <feature-name> [-c]  Create a new worktree and branch"
-    echo "  co                          Pick an existing worktree"
+    echo "  co [-c]                     Pick an existing worktree"
     echo "  update                      Update wt to the latest version"
     echo "  uninstall                   Remove wt from the system"
     echo ""
     echo "Flags:"
-    echo "  -c  Open in Cursor (for create)"
+    echo "  -c  Open in Cursor"
     emit_exit 1
 }
 

@@ -51,12 +51,11 @@ This creates:
 ### Switch to an existing worktree
 
 ```bash
-wt co
+wt co           # Pick worktree and cd into it
+wt co -c        # Same, but also open in Cursor
 ```
 
-Shows an interactive menu to pick a worktree. On selection:
-- Opens the worktree in a new Cursor window
-- Changes the current terminal directory to the worktree
+Shows an interactive picker (use arrow keys to navigate, Enter to select, q to cancel).
 
 ### Update to latest version
 
