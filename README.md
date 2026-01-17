@@ -57,6 +57,14 @@ wt co -c        # Same, but also open in Cursor
 
 Shows an interactive picker (use arrow keys to navigate, Enter to select, q to cancel).
 
+### Remove a worktree
+
+```bash
+wt remove
+```
+
+Interactively select and remove a worktree. If you're currently inside the worktree being removed, you'll be moved to the main repository first.
+
 ### Update to latest version
 
 ```bash
