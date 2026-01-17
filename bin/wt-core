@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # wt-core - Git Worktree Helper (core logic)
-# https://github.com/kaloyanvidelov/wt
+# https://github.com/kaloyanvi/wt
 #
 # This script outputs directives that shell wrappers interpret:
 #   __WT_CD__:/path        - wrapper should cd to this path

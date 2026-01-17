@@ -1,5 +1,5 @@
 # wt - Git Worktree Helper (bash wrapper)
-# https://github.com/kaloyanvidelov/wt
+# https://github.com/kaloyanvi/wt
 #
 # Source this file in your .bashrc
 

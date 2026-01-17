@@ -16,7 +16,7 @@ A shell plugin for managing git worktrees with Cursor IDE integration.
 ### One-liner
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/kaloyanvidelov/wt/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/kaloyanvi/wt/main/install.sh | bash
 ```
 
 The installer automatically detects your shell (zsh or bash) and configures it.
@@ -24,7 +24,7 @@ The installer automatically detects your shell (zsh or bash) and configures it.
 ### Manual
 
 ```bash
-git clone https://github.com/kaloyanvidelov/wt.git ~/.wt
+git clone https://github.com/kaloyanvi/wt.git ~/.wt
 
 # For zsh - add to ~/.zshrc:
 source "${HOME}/.wt/shell/wt.zsh"

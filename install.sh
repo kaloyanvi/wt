@@ -4,7 +4,7 @@
 set -e
 
 WT_DIR="${HOME}/.wt"
-REPO_URL="https://github.com/kaloyanvidelov/wt.git"
+REPO_URL="https://github.com/kaloyanvi/wt.git"
 
 echo "Installing wt..."
 
