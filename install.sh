@@ -1,10 +1,20 @@
 #!/usr/bin/env bash
-# wt installer - https://github.com/kaloyanvidelov/wt
+# wt installer - https://github.com/kaloyanvi/wt
 
 set -e
 
 WT_DIR="${HOME}/.wt"
 REPO_URL="https://github.com/kaloyanvi/wt.git"
+
+# -----------------------------------------------------------------------------
+# Check dependencies
+# -----------------------------------------------------------------------------
+
+if ! command -v git >/dev/null 2>&1; then
+    echo "Error: git is required but not installed."
+    echo "Please install git and try again."
+    exit 1
+fi
 
 echo "Installing wt..."
 

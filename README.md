@@ -1,6 +1,6 @@
 # wt - Git Worktree Helper
 
-A shell plugin for managing git worktrees with Cursor IDE integration.
+A shell plugin for managing git worktrees with editor integration.
 
 **Supports:** zsh, bash
 
@@ -9,7 +9,7 @@ A shell plugin for managing git worktrees with Cursor IDE integration.
 - Create new worktrees in a dedicated sibling directory (`<project>-worktrees/`)
 - Always creates from the main repository, even when run from another worktree
 - Interactive picker for switching between worktrees
-- Optional Cursor IDE integration
+- Optional editor integration (Cursor, VS Code, etc.)
 
 ## Installation
 
@@ -57,6 +57,14 @@ wt co -c        # Same, but also open in Cursor
 
 Shows an interactive picker (use arrow keys to navigate, Enter to select, q to cancel).
 
+### List all worktrees
+
+```bash
+wt list
+```
+
+Displays all worktrees with their paths, marking `(main)` and `(current)`.
+
 ### Remove a worktree
 
 ```bash
@@ -77,6 +85,27 @@ Pulls the latest version from GitHub.
 
 ```bash
 wt uninstall
+```
+
+## Configuration
+
+### Editor
+
+The `-c` flag automatically detects your editor. It checks for these in order:
+
+1. `cursor` (Cursor)
+2. `code` (VS Code)
+3. `zed` (Zed)
+4. `subl` (Sublime Text)
+5. `idea` (IntelliJ IDEA)
+6. `webstorm` (WebStorm)
+7. `atom` (Atom)
+
+To override the auto-detection:
+
+```bash
+# Add to your .zshrc or .bashrc
+export WT_EDITOR="code"
 ```
 
 ## License

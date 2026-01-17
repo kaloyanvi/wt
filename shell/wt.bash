@@ -19,6 +19,22 @@ _wt_get_install_dir() {
 
 export WT_INSTALL_DIR="$(_wt_get_install_dir)"
 
+# Detect editor if not explicitly set.
+_wt_detect_editor() {
+    # User override takes precedence.
+    [[ -n "${WT_EDITOR:-}" ]] && { echo "$WT_EDITOR"; return; }
+
+    # Check for common editors in order of preference.
+    local editors=(cursor code zed subl idea webstorm atom)
+    local editor
+    for editor in "${editors[@]}"; do
+        command -v "$editor" >/dev/null 2>&1 && { echo "$editor"; return; }
+    done
+
+    # No editor found.
+    echo ""
+}
+
 wt() {
     local output
     local exit_code=0
@@ -49,7 +65,11 @@ wt() {
 
     # Execute directives.
     if [[ -n "$cursor_path" ]]; then
-        cursor -n "$cursor_path" 2>/dev/null || true
+        local editor
+        editor="$(_wt_detect_editor)"
+        if [[ -n "$editor" ]]; then
+            "$editor" -n "$cursor_path" 2>/dev/null || "$editor" "$cursor_path" 2>/dev/null || true
+        fi
     fi
 
     if [[ -n "$cd_path" ]]; then

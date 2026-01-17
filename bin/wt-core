@@ -276,6 +276,56 @@ cmd_co() {
     emit_exit 0
 }
 
+cmd_list() {
+    # Ensure we're in a git repo.
+    if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        die "not inside a Git repository."
+    fi
+
+    # Get the main worktree path.
+    local main_worktree
+    main_worktree="$(get_main_repo)" || die "could not determine main repository."
+
+    # Get current directory to mark current worktree.
+    local current_dir
+    current_dir="$(pwd -P)"
+
+    # Gather all worktree paths.
+    local worktree_paths=()
+    while IFS= read -r line; do
+        if [[ "$line" == worktree\ * ]]; then
+            worktree_paths+=("${line#worktree }")
+        fi
+    done < <(git worktree list --porcelain)
+
+    if [[ ${#worktree_paths[@]} -eq 0 ]]; then
+        echo "No worktrees found."
+        emit_exit 0
+        return
+    fi
+
+    # Print each worktree with labels.
+    local i
+    for i in "${!worktree_paths[@]}"; do
+        local path="${worktree_paths[$i]}"
+        local name
+        name="$(basename "$path")"
+        local labels=""
+
+        if [[ "$path" == "$main_worktree" ]]; then
+            labels=" (main)"
+        fi
+        if [[ "$current_dir" == "$path" || "$current_dir" == "$path/"* ]]; then
+            labels="${labels} (current)"
+        fi
+
+        echo "${name}${labels}"
+        echo "  ${path}"
+    done
+
+    emit_exit 0
+}
+
 cmd_remove() {
     # Ensure we're in a git repo.
     if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -375,7 +425,7 @@ cmd_update() {
 
     if [[ ! -d "${wt_dir}/.git" ]]; then
         echo "Error: wt installation is not a git repository."
-        echo "Re-install with: curl -fsSL https://raw.githubusercontent.com/kaloyanvidelov/wt/main/install.sh | bash"
+        echo "Re-install with: curl -fsSL https://raw.githubusercontent.com/kaloyanvi/wt/main/install.sh | bash"
         emit_exit 1
         return
     fi
@@ -468,12 +518,13 @@ cmd_help() {
     echo "Commands:"
     echo "  create <feature-name> [-c]  Create a new worktree and branch"
     echo "  co [-c]                     Pick an existing worktree"
+    echo "  list                        List all worktrees"
     echo "  remove                      Remove a worktree"
     echo "  update                      Update wt to the latest version"
     echo "  uninstall                   Remove wt from the system"
     echo ""
     echo "Flags:"
-    echo "  -c  Open in Cursor"
+    echo "  -c  Open in editor (auto-detects cursor, code, zed, etc.)"
     emit_exit 1
 }
 
@@ -494,6 +545,9 @@ main() {
             ;;
         remove)
             cmd_remove "$@"
+            ;;
+        list|ls)
+            cmd_list "$@"
             ;;
         update)
             cmd_update "$@"
